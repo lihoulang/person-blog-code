@@ -5,7 +5,7 @@
   "homepage": "https://lihoulang.github.io/person-blog",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/prepare-static.js && next build && node scripts/generate-static-api.js && node scripts/restore-app.js",
+    "build": "next build",
     "build:static": "node scripts/prepare-static.js && next build && node scripts/generate-static-api.js && node scripts/github-pages.js && node scripts/restore-app.js",
     "start": "next start",
     "lint": "next lint",
