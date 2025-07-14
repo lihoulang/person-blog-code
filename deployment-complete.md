@@ -1,80 +1,69 @@
-# 部署完成与后续步骤
+# Vercel部署核心步骤
 
-## 当前状态
-- Vercel项目已部署：https://person-blog-6k0uw8xoo-lihl.vercel.app
-- Vercel环境变量已设置：
-  - `DATABASE_URL`: 目前指向本地数据库，需要更新为PlanetScale URL
-  - `JWT_SECRET`: 已设置，但应使用更安全的密钥
+## 准备工作
 
-## 剩余步骤
+1. **GitHub仓库**: 确保代码已推送到GitHub
+2. **Vercel账户**: 使用GitHub账户登录Vercel
+3. **项目配置**: 确认next.config.js不包含静态导出设置
 
-### 1. 创建PlanetScale账户并设置数据库
-1. 访问 https://planetscale.com/sign-up 注册账户
-2. 创建名为 `personal-blog` 的新数据库
-3. 选择合适的区域(建议东京或新加坡)
-4. 数据库创建后，点击"Connect"生成数据库凭证
-5. 选择"Prisma"连接选项获取适用于Prisma的连接字符串
+## 部署流程
 
-### 2. 使用新的数据库连接字符串更新Vercel环境变量
-1. 登录Vercel仪表盘: https://vercel.com/lihl/person-blog
-2. 导航至"Settings" > "Environment Variables"
-3. 编辑`DATABASE_URL`环境变量，使用PlanetScale提供的连接字符串
-4. 确保使用格式: `mysql://<USERNAME>:<PASSWORD>@<HOST>/<DATABASE>?sslaccept=strict`
+1. **登录Vercel**: https://vercel.com
+2. **导入项目**: 
+   - 点击"Add New..." > "Project"
+   - 选择您的GitHub仓库
+   - 点击"Import"
 
-### 3. 初始化数据库架构
-本地连接到PlanetScale数据库，并创建所需的表结构：
-```bash
-# 使用PlanetScale CLI创建一个安全连接
-pscale connect personal-blog main --port 3309
+3. **配置设置**:
+   - 指定根目录: `person-blog-code`
+   - 保留默认构建设置
+   - 添加环境变量:
+     - `DATABASE_URL`
+     - `JWT_SECRET`
+     - `NEXT_PUBLIC_BASE_URL`
 
-# 修改.env文件指向PlanetScale
-# DATABASE_URL="mysql://root@127.0.0.1:3309/personal-blog"
+4. **开始部署**: 点击"Deploy"按钮
 
-# 使用Prisma推送数据库架构
-npx prisma db push
-```
+5. **设置数据库**:
+   - 在项目仪表板中点击"Storage" > "Connect Store"
+   - 选择"Postgres" > "Create New"
+   - 选择区域和计划
+   - 点击"Create"
 
-### 4. 重新部署Vercel项目
-```bash
-vercel --prod
-```
+6. **初始化数据库**:
+   - 在部署详情页面打开控制台
+   - 运行: `npx prisma migrate deploy`
 
-## 可能遇到的问题及解决方案
+7. **验证部署**:
+   - 点击"Visit"访问您的应用
+   - 测试各项功能是否正常工作
+
+## 可能的问题和解决方案
+
+### 部署失败
+- 检查构建日志
+- 确认环境变量设置正确
 
 ### 数据库连接问题
-- **问题**: 应用无法连接到PlanetScale数据库
-- **解决方案**: 
-  - 确认连接字符串格式正确，包括用户名、密码和主机名
-  - 确认PlanetScale数据库处于活动状态
-  - 检查Vercel日志了解详细错误信息
+- 验证数据库URL格式
+- 确认数据库服务正常运行
 
-### Flexsearch导入问题
-- **问题**: 搜索功能报错，可能是Flexsearch导入方式不兼容
-- **解决方案**:
-  - 修改`src/lib/search.ts`文件中的导入语句
-  - 使用CommonJS导入方式: `const FlexSearch = require('flexsearch');`
-  - 重新部署应用
+### 应用功能不正常
+- 检查服务器日志
+- 确认数据库迁移是否成功
 
-### 页面路由问题
-- **问题**: 某些页面显示404错误
-- **解决方案**:
-  - 确认页面文件存在于正确位置
-  - 检查Next.js配置文件
-  - 查看Vercel构建日志中的警告或错误
+## 持续更新
 
-## 长期维护建议
+每次推送代码到GitHub仓库，Vercel会自动重新部署您的应用。
 
-### 监控
-- 定期检查PlanetScale数据库使用情况
-- 监控Vercel部署性能和错误
-- 设置自动备份策略
+## 本地开发环境
 
-### 性能优化
-- 使用PlanetScale查询分析工具优化数据库查询
-- 确保前端页面加载速度和代码性能
-- 考虑使用边缘缓存和CDN加速内容交付
+```bash
+# 创建.env.local文件
+DATABASE_URL="postgresql://postgres:password@localhost:5432/blog"
+JWT_SECRET="your-dev-secret"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 
-### 安全
-- 定期更新JWT密钥和其他安全凭证
-- 确保数据库访问权限控制得当
-- 监控并更新依赖包版本，防止安全漏洞 
+# 启动开发服务器
+npm run dev
+``` 
