@@ -1,8 +1,15 @@
 {
+  "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/auth/login", "destination": "/auth/login" },
+    { "source": "/auth/register", "destination": "/auth/register" },
+    { "source": "/api/auth/:path*", "destination": "/api/auth/:path*" }
+  ],
   "env": {
-    "JWT_SECRET": "@jwt_secret"
+    "JWT_SECRET": "@jwt_secret",
+    "NEXT_PUBLIC_BASE_URL": "@next_public_base_url"
   }
 } 
