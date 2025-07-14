@@ -6,6 +6,23 @@ import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
   try {
+    // 检查环境变量
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL环境变量未设置');
+      return NextResponse.json(
+        { error: '服务器配置错误: 数据库连接未配置' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET环境变量未设置');
+      return NextResponse.json(
+        { error: '服务器配置错误: JWT密钥未配置' },
+        { status: 500 }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     // 验证请求数据
@@ -42,14 +59,7 @@ export async function POST(req: Request) {
 
     // 创建JWT
     const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      console.error('JWT_SECRET环境变量未设置');
-      return NextResponse.json(
-        { error: '服务器配置错误' },
-        { status: 500 }
-      );
-    }
-
+    
     // 生成令牌
     const token = sign(
       { 
@@ -79,10 +89,19 @@ export async function POST(req: Request) {
       user: userWithoutPassword,
       token,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('注册失败:', error);
+    
+    // 提供更详细的错误信息
+    const errorMessage = error.message || '注册失败，请稍后重试';
+    
+    // 检查是否是Prisma错误
+    if (error.code) {
+      console.error('Prisma错误代码:', error.code);
+    }
+    
     return NextResponse.json(
-      { error: '注册失败，请稍后重试' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
