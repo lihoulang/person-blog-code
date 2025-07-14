@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "slug": "hello-world",
+    "name": "张三",
+    "content": "这是一个很棒的博客系统！喜欢这个设计。",
+    "createdAt": "2023-07-20T08:30:00.000Z"
+  },
+  {
+    "id": "2",
+    "slug": "hello-world",
+    "name": "李四",
+    "email": "lisi@example.com",
+    "content": "我同意，这个博客系统非常实用，特别是评论功能很好用！",
+    "createdAt": "2023-07-21T10:15:00.000Z",
+    "parentId": "1"
+  },
+  {
+    "id": "1afe2e40-0933-47d1-afab-3030ec6d53e2",
+    "slug": "hello-world",
+    "name": "李后浪",
+    "email": "819317636@qq.com",
+    "content": "4",
+    "createdAt": "2025-07-11T07:10:45.583Z"
+  }
+]

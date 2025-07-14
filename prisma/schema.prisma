@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 用户模型
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  name        String?
+  password    String
+  posts       Post[]
+  comments    Comment[]
+  bookmarks   Bookmark[]
+  likes       Like[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// 文章模型
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  content     String    
+  description String?   
+  published   Boolean   @default(false)
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    Int
+  tags        Tag[]
+  comments    Comment[]
+  bookmarks   Bookmark[]
+  likes       Like[]
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// 标签模型
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[]
+}
+
+// 评论模型
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String    
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId  Int?
+  // 如果用户未登录，使用这些字段
+  guestName String?
+  guestEmail String?
+  // 评论状态
+  isApproved Boolean  @default(false)
+  // 评论层级
+  parentId   Int?      
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies    Comment[] @relation("CommentReplies")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// 订阅者模型
+model Subscriber {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  name       String?
+  isVerified Boolean  @default(false)
+  verificationToken String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// 收藏模型
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+// 点赞模型
+model Like {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
