@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "build:static": "node scripts/prepare-static.js && next build && node scripts/generate-static-api.js && node scripts/github-pages.js && node scripts/restore-app.js",
     "start": "next start",
     "lint": "next lint",
