@@ -5,6 +5,23 @@ import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
+    // 检查环境变量
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL环境变量未设置');
+      return NextResponse.json(
+        { error: '服务器配置错误: 数据库连接未配置' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET环境变量未设置');
+      return NextResponse.json(
+        { error: '服务器配置错误: JWT密钥未配置' },
+        { status: 500 }
+      );
+    }
+
     // 从cookie中获取令牌
     const cookieStore = cookies();
     const token = cookieStore.get('auth_token')?.value;
@@ -19,13 +36,6 @@ export async function GET() {
 
     // 验证令牌
     const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      console.error('JWT_SECRET环境变量未设置');
-      return NextResponse.json(
-        { error: '服务器配置错误' },
-        { status: 500 }
-      );
-    }
 
     // 解析令牌
     const decoded = verify(token, jwtSecret) as { id: number };
@@ -49,10 +59,19 @@ export async function GET() {
     return NextResponse.json({
       user: userWithoutPassword,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('验证用户失败:', error);
+    
+    // 提供更详细的错误信息
+    const errorMessage = error.message || '验证失败，请重新登录';
+    
+    // 检查是否是Prisma错误
+    if (error.code) {
+      console.error('Prisma错误代码:', error.code);
+    }
+    
     return NextResponse.json(
-      { error: '验证失败，请重新登录' },
+      { error: errorMessage },
       { status: 401 }
     );
   }
