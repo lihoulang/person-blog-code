@@ -34,7 +34,8 @@ export interface JWTPayload {
 // 认证上下文类型
 export interface AuthContextType {
   user: Omit<User, 'password'> | null
-  login: (_credentials: Credentials) => Promise<void>
+  login: (_email: string, _password: string) => Promise<any>
+  register: (_name: string, _email: string, _password: string) => Promise<any>
   logout: () => void
   isLoading: boolean
   error: string | null

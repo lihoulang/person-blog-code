@@ -2,9 +2,6 @@
   "buildCommand": "next build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ],
   "env": {
     "JWT_SECRET": "@jwt_secret"
   }

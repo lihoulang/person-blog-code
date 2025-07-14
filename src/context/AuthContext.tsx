@@ -11,7 +11,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Omit<User, 'password'> | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, _setError] = useState<string | null>(null)
   const router = useRouter()
 
   // 初始化 - 检查认证状态
@@ -38,14 +38,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // 登录方法
-  const login = async (userData: Omit<User, 'password'>, token: string) => {
-    setUser(userData)
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+      });
 
-    // 登录成功时的事件处理
-    const event = new CustomEvent('auth:login', { 
-      detail: { user: userData } 
-    });
-    window.dispatchEvent(event);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '登录失败');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+
+      // 登录成功时的事件处理
+      const event = new CustomEvent('auth:login', { 
+        detail: { user: data.user } 
+      });
+      window.dispatchEvent(event);
+
+      return data.user;
+    } catch (error: any) {
+      console.error('登录失败:', error);
+      throw error;
+    }
+  }
+
+  // 注册方法
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '注册失败');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+
+      // 注册成功时的事件处理
+      const event = new CustomEvent('auth:register', { 
+        detail: { user: data.user } 
+      });
+      window.dispatchEvent(event);
+
+      return data.user;
+    } catch (error: any) {
+      console.error('注册失败:', error);
+      throw error;
+    }
   }
 
   // 登出方法
@@ -77,8 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
+        register,
         isLoading,
-        error
+        error: _error
       }}
     >
       {children}
