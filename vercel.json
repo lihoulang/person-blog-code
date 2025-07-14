@@ -2,9 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "env": {
-    "JWT_SECRET": "@jwt_secret",
-    "NEXT_PUBLIC_BASE_URL": "@next_public_base_url"
-  }
-} 
+  "installCommand": "npm install"
+}
