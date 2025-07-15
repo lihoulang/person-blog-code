@@ -26,10 +26,19 @@ async function main() {
           email: testEmail,
           name: '测试用户',
           password: hashedPassword,
+          role: 'admin', // 设置为管理员角色
         }
       });
       console.log(`测试用户已创建，ID: ${user.id}`);
     } else {
+      // 如果用户已存在但没有admin角色，更新为admin
+      if (user.role !== 'admin') {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { role: 'admin' }
+        });
+        console.log(`已将用户 ${user.id} 更新为管理员角色`);
+      }
       console.log(`测试用户已存在，ID: ${user.id}`);
     }
     
