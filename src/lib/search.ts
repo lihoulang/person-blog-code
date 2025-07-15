@@ -1,6 +1,7 @@
-import { Index } from 'flexsearch';
+import { Document } from 'flexsearch';
 import { getAllPosts } from './blog';
 
+// 搜索索引的缓存
 let searchIndex: any = null;
 
 export type SearchablePost = {
@@ -14,15 +15,24 @@ export type SearchablePost = {
 
 // 创建搜索索引
 export function createSearchIndex() {
-  const index = new Index({
-    tokenize: 'forward',
-    preset: 'match'
+  // 使用Document API，而不是Index API
+  const index = new Document({
+    document: {
+      id: 'id',
+      index: [
+        'title',
+        'content',
+        'description',
+        'tags'
+      ]
+    },
+    tokenize: 'forward'
   });
   
   return index;
 }
 
-// 缓存搜索索引，避免重复初始化
+// 获取或初始化搜索索引
 export async function getSearchIndex() {
   if (searchIndex) {
     return searchIndex;
@@ -34,30 +44,24 @@ export async function getSearchIndex() {
 
 // 将文章添加到搜索索引中
 export function indexPosts(index: any, posts: SearchablePost[]) {
-  posts.forEach((post, idx) => {
-    // 添加标题
-    index.add(idx, post.title);
+  posts.forEach((post) => {
+    // 准备用于索引的文档对象
+    const doc = {
+      id: post.id,
+      title: post.title,
+      content: post.content || '',
+      description: post.description || '',
+      tags: post.tags ? post.tags.join(' ') : ''
+    };
     
-    // 添加内容
-    if (post.content) {
-      index.add(`content_${idx}`, post.content);
-    }
-    
-    // 添加描述
-    if (post.description) {
-      index.add(`desc_${idx}`, post.description);
-    }
-    
-    // 添加标签
-    if (post.tags && post.tags.length > 0) {
-      index.add(`tags_${idx}`, post.tags.join(' '));
-    }
+    // 添加到索引
+    index.add(doc);
   });
   
   return { index, posts };
 }
 
-// 创建并初始化搜索索引
+// 初始化搜索索引
 export async function initSearchIndex() {
   const index = createSearchIndex();
   const posts = await getAllPosts();
@@ -75,25 +79,40 @@ export async function initSearchIndex() {
 }
 
 // 执行搜索查询
-export async function searchPosts(query: string) {
-  const { index, posts } = await getSearchIndex();
-  
-  // 搜索
-  const results = index.search(query);
-  
-  // 处理结果
-  const resultIds = new Set();
-  const resultPosts = [];
-  
-  // 处理搜索结果
-  for (const id of results) {
-    const numericId = parseInt(String(id).replace(/^(content|desc|tags)_/, ''));
+export async function searchPosts(query: string): Promise<SearchablePost[]> {
+  try {
+    const { index, posts } = await getSearchIndex();
     
-    if (!resultIds.has(numericId)) {
-      resultIds.add(numericId);
-      resultPosts.push(posts[numericId]);
+    // 在多个字段中搜索
+    const titleResults = await index.search(query, { index: 'title', limit: 10 });
+    const contentResults = await index.search(query, { index: 'content', limit: 10 });
+    const descResults = await index.search(query, { index: 'description', limit: 5 });
+    const tagResults = await index.search(query, { index: 'tags', limit: 5 });
+    
+    // 合并所有结果
+    const allResults = [...titleResults, ...contentResults, ...descResults, ...tagResults];
+    
+    // 去重处理
+    const resultIds = new Set<string>();
+    const resultPosts: SearchablePost[] = [];
+    
+    for (const resultSet of allResults) {
+      if (resultSet.result && resultSet.result.length > 0) {
+        for (const id of resultSet.result) {
+          if (!resultIds.has(id)) {
+            resultIds.add(id);
+            const post = posts.find((p: SearchablePost) => p.id === id);
+            if (post) {
+              resultPosts.push(post);
+            }
+          }
+        }
+      }
     }
+    
+    return resultPosts;
+  } catch (error) {
+    console.error('搜索出错:', error);
+    return [];
   }
-  
-  return resultPosts;
 } 

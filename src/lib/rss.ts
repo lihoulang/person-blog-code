@@ -1,4 +1,79 @@
+import { Feed } from 'feed';
 import { Post } from '@/types/post';
+import { marked } from 'marked';
+
+/**
+ * 生成Feed对象
+ * @param posts 博客文章列表
+ * @param baseUrl 网站基础URL
+ * @returns Feed对象
+ */
+function createFeed(posts: Post[], baseUrl: string): Feed {
+  const siteName = '个人博客';
+  const siteDescription = '分享技术、生活和思考';
+  const authorName = '博客作者';
+  const authorEmail = 'author@example.com';
+  const now = new Date();
+  
+  // 创建Feed实例
+  const feed = new Feed({
+    title: siteName,
+    description: siteDescription,
+    id: baseUrl,
+    link: baseUrl,
+    language: 'zh-CN',
+    image: `${baseUrl}/logo.png`,
+    favicon: `${baseUrl}/favicon.ico`,
+    copyright: `Copyright © ${now.getFullYear()} ${siteName}`,
+    updated: now,
+    feedLinks: {
+      rss2: `${baseUrl}/rss.xml`,
+      atom: `${baseUrl}/atom.xml`,
+      json: `${baseUrl}/feed.json`,
+    },
+    author: {
+      name: authorName,
+      email: authorEmail,
+      link: baseUrl
+    }
+  });
+
+  // 添加每篇文章
+  posts.forEach(post => {
+    const postUrl = `${baseUrl}/blog/${post.slug}`;
+    const pubDate = new Date(post.date);
+    
+    // 将Markdown转换为HTML（如果内容是Markdown格式）
+    let contentHtml = post.content || '';
+    if (post.content && !post.content.includes('<')) {
+      try {
+        // 使用同步API避免Promise问题
+        contentHtml = marked.parse(post.content, { async: false }) as string;
+      } catch (error) {
+        console.error('Markdown解析错误:', error);
+      }
+    }
+    
+    feed.addItem({
+      title: post.title,
+      id: postUrl,
+      link: postUrl,
+      description: post.description,
+      content: contentHtml,
+      author: [
+        {
+          name: post.author || authorName,
+          link: baseUrl
+        }
+      ],
+      date: pubDate,
+      image: post.coverImage ? `${baseUrl}${post.coverImage}` : undefined,
+      category: post.tags?.map(tag => ({ name: tag })) || []
+    });
+  });
+
+  return feed;
+}
 
 /**
  * 生成RSS 2.0格式的Feed
@@ -7,47 +82,8 @@ import { Post } from '@/types/post';
  * @returns RSS 2.0 XML字符串
  */
 export function generateRssFeed(posts: Post[], baseUrl: string): string {
-  const siteName = '个人博客';
-  const siteDescription = '分享技术、生活和思考';
-  const language = 'zh-cn';
-  const now = new Date().toUTCString();
-  
-  // 构建RSS头部
-  let rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-  <title>${siteName}</title>
-  <link>${baseUrl}</link>
-  <description>${siteDescription}</description>
-  <language>${language}</language>
-  <lastBuildDate>${now}</lastBuildDate>
-  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
-`;
-
-  // 添加每篇文章
-  posts.forEach(post => {
-    const postUrl = `${baseUrl}/blog/${post.slug}`;
-    const pubDate = new Date(post.date).toUTCString();
-    const description = post.description || '';
-    
-    rss += `
-  <item>
-    <title>${escapeXml(post.title)}</title>
-    <link>${postUrl}</link>
-    <guid>${postUrl}</guid>
-    <pubDate>${pubDate}</pubDate>
-    <description>${escapeXml(description)}</description>
-    ${post.content ? `<content:encoded><![CDATA[${post.content}]]></content:encoded>` : ''}
-    ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category>${escapeXml(tag)}</category>`).join('\n    ') : ''}
-  </item>`;
-  });
-  
-  // 关闭RSS
-  rss += `
-</channel>
-</rss>`;
-
-  return rss;
+  const feed = createFeed(posts, baseUrl);
+  return feed.rss2();
 }
 
 /**
@@ -57,65 +93,17 @@ export function generateRssFeed(posts: Post[], baseUrl: string): string {
  * @returns Atom 1.0 XML字符串
  */
 export function generateAtomFeed(posts: Post[], baseUrl: string): string {
-  const siteName = '个人博客';
-  const siteDescription = '分享技术、生活和思考';
-  const authorName = '博客作者';
-  const authorEmail = 'author@example.com';
-  const now = new Date().toISOString();
-  
-  // 构建Atom头部
-  let atom = `<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>${siteName}</title>
-  <subtitle>${siteDescription}</subtitle>
-  <link href="${baseUrl}/atom.xml" rel="self" type="application/atom+xml" />
-  <link href="${baseUrl}" rel="alternate" type="text/html" />
-  <updated>${now}</updated>
-  <id>${baseUrl}/</id>
-  <author>
-    <name>${authorName}</name>
-    <email>${authorEmail}</email>
-  </author>
-`;
-
-  // 添加每篇文章
-  posts.forEach(post => {
-    const postUrl = `${baseUrl}/blog/${post.slug}`;
-    const updated = new Date(post.date).toISOString();
-    const published = new Date(post.date).toISOString();
-    const summary = post.description || '';
-    
-    atom += `
-  <entry>
-    <title>${escapeXml(post.title)}</title>
-    <link href="${postUrl}" rel="alternate" type="text/html" />
-    <id>${postUrl}</id>
-    <published>${published}</published>
-    <updated>${updated}</updated>
-    <summary>${escapeXml(summary)}</summary>
-    ${post.content ? `<content type="html"><![CDATA[${post.content}]]></content>` : ''}
-    ${post.author ? `<author><name>${escapeXml(post.author)}</name></author>` : ''}
-    ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category term="${escapeXml(tag)}" />`).join('\n    ') : ''}
-  </entry>`;
-  });
-  
-  // 关闭Atom
-  atom += `
-</feed>`;
-
-  return atom;
+  const feed = createFeed(posts, baseUrl);
+  return feed.atom1();
 }
 
 /**
- * 转义XML特殊字符
- * @param text 需要转义的文本
- * @returns 转义后的文本
+ * 生成JSON Feed
+ * @param posts 博客文章列表
+ * @param baseUrl 网站基础URL
+ * @returns JSON Feed字符串
  */
-function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+export function generateJsonFeed(posts: Post[], baseUrl: string): string {
+  const feed = createFeed(posts, baseUrl);
+  return feed.json1();
 } 
