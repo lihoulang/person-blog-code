@@ -31,12 +31,21 @@ export interface JWTPayload {
   exp?: number
 }
 
+// 用户资料更新数据
+export interface ProfileUpdateData {
+  name?: string
+  email?: string
+  currentPassword?: string
+  newPassword?: string
+}
+
 // 认证上下文类型
 export interface AuthContextType {
   user: Omit<User, 'password'> | null
   login: (_email: string, _password: string) => Promise<any>
   register: (_name: string, _email: string, _password: string) => Promise<any>
   logout: () => void
+  updateProfile: (_data: ProfileUpdateData) => Promise<any>
   isLoading: boolean
   error: string | null
 } 

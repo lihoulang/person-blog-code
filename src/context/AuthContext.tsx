@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { AuthContextType, User } from '@/types/auth'
+import { AuthContextType, User, ProfileUpdateData } from '@/types/auth'
 import { useRouter } from 'next/navigation'
 
 // 创建认证上下文
@@ -103,6 +103,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 更新用户资料方法
+  const updateProfile = async (data: ProfileUpdateData) => {
+    try {
+      const response = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '更新资料失败');
+      }
+
+      const responseData = await response.json();
+      setUser(responseData.user);
+
+      // 更新资料成功时的事件处理
+      const event = new CustomEvent('auth:profile-update', { 
+        detail: { user: responseData.user } 
+      });
+      window.dispatchEvent(event);
+
+      return responseData;
+    } catch (error: any) {
+      console.error('更新资料失败:', error);
+      throw error;
+    }
+  }
+
   // 登出方法
   const logout = async () => {
     try {
@@ -133,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         register,
+        updateProfile,
         isLoading,
         error: _error
       }}

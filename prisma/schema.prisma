@@ -12,13 +12,17 @@ model User {
   email     String     @unique
   name      String?
   password  String
-  role      String     @default("user")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   bookmarks Bookmark[]
   comments  Comment[]
   likes     Like[]
   posts     Post[]
+  followers Follow[]   @relation("Following")
+  following Follow[]   @relation("Followers")
+  role      String     @default("user")
+  bio       String?
+  avatar    String?
 }
 
 model Post {
@@ -35,6 +39,7 @@ model Post {
   bookmarks   Bookmark[]
   comments    Comment[]
   likes       Like[]
+  views       PostView[]
   author      User       @relation(fields: [authorId], references: [id])
   tags        Tag[]      @relation("PostToTag")
 }
@@ -92,4 +97,29 @@ model Like {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+}
+
+model PostView {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  ip        String?
+  userAgent String?
+  referrer  String?
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([createdAt])
+}
+
+// 用户关注关系表
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int      // 关注者ID
+  followingId Int      // 被关注者ID
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
 }

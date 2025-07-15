@@ -165,7 +165,9 @@ export default async function PostPage({ params }: PostPageProps) {
           <h3 className="text-lg font-semibold mb-3">分享这篇文章</h3>
           <ShareButtons 
             title={post.title} 
-            url={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog/${post.slug}`} 
+            url={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog/${post.slug}`}
+            description={post.description || `阅读关于${post.title}的文章`}
+            showText={true}
           />
         </div>
         

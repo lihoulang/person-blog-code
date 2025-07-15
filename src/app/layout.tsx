@@ -70,6 +70,8 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml" />
+        <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/atom.xml" />
       </head>
       <body className={inter.className}>
         <AuthProvider>

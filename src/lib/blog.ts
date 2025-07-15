@@ -162,6 +162,43 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   }
 }
 
+// 根据ID获取文章
+export async function getPostById(id: number): Promise<Post | null> {
+  try {
+    // 从数据库获取文章
+    const dbPost = await prisma.post.findUnique({
+      where: { id },
+      include: {
+        tags: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!dbPost) {
+      return null;
+    }
+
+    return {
+      id: String(dbPost.id),
+      title: dbPost.title,
+      date: dbPost.createdAt.toISOString().split('T')[0],
+      slug: dbPost.slug,
+      description: dbPost.description || '',
+      content: dbPost.content,
+      tags: dbPost.tags.map((tag) => tag.name),
+      viewCount: dbPost.viewCount,
+      author: dbPost.author?.name || 'Unknown',
+    };
+  } catch (error) {
+    console.error(`获取文章ID ${id} 失败:`, error);
+    return null;
+  }
+}
+
 // 获取所有标签
 export async function getAllTags() {
   try {
