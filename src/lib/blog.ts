@@ -40,6 +40,13 @@ export async function getAllPosts(): Promise<Post[]> {
 // 根据Slug获取文章
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   try {
+    console.log(`开始从数据库获取文章, slug: ${slug}`);
+    
+    if (!slug) {
+      console.error('获取文章失败: slug参数为空');
+      return null;
+    }
+    
     // 从数据库获取文章
     const dbPost = await prisma.post.findUnique({
       where: { slug },
@@ -54,9 +61,12 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     });
 
     if (!dbPost) {
+      console.log(`未找到文章: ${slug}`);
       return null;
     }
 
+    console.log(`成功获取文章数据: ${dbPost.title} (ID: ${dbPost.id})`);
+    
     return {
       id: String(dbPost.id),
       title: dbPost.title,
@@ -70,6 +80,10 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     };
   } catch (error) {
     console.error(`获取文章 ${slug} 失败:`, error);
+    // 返回堆栈信息以便调试
+    if (error instanceof Error) {
+      console.error('错误堆栈:', error.stack);
+    }
     return null;
   }
 }
