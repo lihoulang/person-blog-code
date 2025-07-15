@@ -10,6 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: false,
+  output: 'hybrid',  // 混合输出模式，支持静态和动态页面
   async rewrites() {
     return [
       {

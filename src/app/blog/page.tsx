@@ -1,5 +1,8 @@
 import Link from 'next/link'
 
+// 设置为服务端渲染
+export const dynamic = 'force-dynamic';
+
 export default function BlogPage() {
   return (
     <div className="container mx-auto px-4 py-8">

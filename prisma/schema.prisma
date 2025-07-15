@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,98 +7,88 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 用户模型
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  name        String?
-  password    String
-  posts       Post[]
-  comments    Comment[]
-  bookmarks   Bookmark[]
-  likes       Like[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  name      String?
+  password  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  bookmarks Bookmark[]
+  comments  Comment[]
+  likes     Like[]
+  posts     Post[]
 }
 
-// 文章模型
 model Post {
-  id          Int       @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   title       String
-  slug        String    @unique
-  content     String    
-  description String?   
-  published   Boolean   @default(false)
-  author      User      @relation(fields: [authorId], references: [id])
+  slug        String     @unique
+  content     String
+  description String?
+  published   Boolean    @default(false)
   authorId    Int
-  tags        Tag[]
-  comments    Comment[]
+  viewCount   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   bookmarks   Bookmark[]
+  comments    Comment[]
   likes       Like[]
-  viewCount   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  author      User       @relation(fields: [authorId], references: [id])
+  tags        Tag[]      @relation("PostToTag")
 }
 
-// 标签模型
 model Tag {
   id    Int    @id @default(autoincrement())
   name  String @unique
-  posts Post[]
+  posts Post[] @relation("PostToTag")
 }
 
-// 评论模型
 model Comment {
-  id        Int       @id @default(autoincrement())
-  content   String    
-  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
-  author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  authorId  Int?
-  // 如果用户未登录，使用这些字段
-  guestName String?
+  id         Int       @id @default(autoincrement())
+  content    String
+  postId     Int
+  authorId   Int?
+  guestName  String?
   guestEmail String?
-  // 评论状态
-  isApproved Boolean  @default(false)
-  // 评论层级
-  parentId   Int?      
-  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
-  replies    Comment[] @relation("CommentReplies")
+  isApproved Boolean   @default(false)
+  parentId   Int?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  author     User?     @relation(fields: [authorId], references: [id])
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[] @relation("CommentReplies")
+  post       Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
-// 订阅者模型
 model Subscriber {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  name       String?
-  isVerified Boolean  @default(false)
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  name              String?
+  isVerified        Boolean  @default(false)
   verificationToken String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
-// 收藏模型
 model Bookmark {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
 }
 
-// 点赞模型
 model Like {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
 }

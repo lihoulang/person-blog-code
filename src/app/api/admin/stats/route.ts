@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
+// 强制此路由为动态路由
+export const dynamic = 'force-dynamic';
+
 // 验证JWT令牌
 async function verifyJwtToken(token: string) {
   try {

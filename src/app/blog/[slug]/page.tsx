@@ -13,13 +13,12 @@ interface PostPageProps {
   };
 }
 
-// 生成静态页面路径
-export async function generateStaticParams() {
-  const posts = await getAllPosts();
-  
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+// 导入所需模块并添加generateStaticParams函数
+export function generateStaticParams() {
+  return [
+    { slug: 'hello-world' },
+    { slug: 'getting-started-with-nextjs' }
+  ];
 }
 
 // 动态生成元数据

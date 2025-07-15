@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { verify } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
+// 强制此路由为动态路由
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // 检查环境变量

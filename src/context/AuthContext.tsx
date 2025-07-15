@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       setUser(data.user);
 
-      // 登录成功时的事件处理
-      const event = new CustomEvent('auth:login', { 
+    // 登录成功时的事件处理
+    const event = new CustomEvent('auth:login', { 
         detail: { user: data.user } 
       });
       window.dispatchEvent(event);
@@ -93,8 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 注册成功时的事件处理
       const event = new CustomEvent('auth:register', { 
         detail: { user: data.user } 
-      });
-      window.dispatchEvent(event);
+    });
+    window.dispatchEvent(event);
 
       return data.user;
     } catch (error: any) {

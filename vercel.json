@@ -2,5 +2,11 @@
   "framework": "nextjs",
   "buildCommand": "chmod +x vercel-build.sh && ./vercel-build.sh",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/blog", "status": 308, "dest": "/blog/" },
+    { "src": "/blog/[^/]+", "dest": "/blog/[slug]" }
+  ]
 }
