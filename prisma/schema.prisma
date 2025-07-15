@@ -8,21 +8,26 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  name      String?
-  password  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  bookmarks Bookmark[]
-  comments  Comment[]
-  likes     Like[]
-  posts     Post[]
-  followers Follow[]   @relation("Following")
-  following Follow[]   @relation("Followers")
-  role      String     @default("user")
-  bio       String?
-  avatar    String?
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  name           String?
+  password       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  bookmarks      Bookmark[]
+  comments       Comment[]
+  likes          Like[]
+  posts          Post[]
+  followers      Follow[]        @relation("Following")
+  following      Follow[]        @relation("Followers")
+  role           String          @default("user")
+  bio            String?
+  avatar         String?
+  sentMessages   Message[]       @relation("MessageSender")
+  receivedMessages Message[]      @relation("MessageReceiver")
+  conversations  UserConversation[]
+  online         Boolean         @default(false)
+  lastSeen       DateTime?
 }
 
 model Post {
@@ -122,4 +127,49 @@ model Follow {
   following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
+}
+
+// 对话模型
+model Conversation {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lastMessageAt   DateTime          @default(now())
+  name            String?           // 群聊的名称，对于私聊可以为空
+  isGroup         Boolean           @default(false)
+  participantIds  String[]         // 参与者ID数组，存储为字符串
+  messages        Message[]
+  users           UserConversation[]
+}
+
+// 用户与对话的多对多关系
+model UserConversation {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  conversationId Int
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lastRead       DateTime     @default(now())
+
+  @@unique([userId, conversationId])
+}
+
+// 消息模型
+model Message {
+  id             Int          @id @default(autoincrement())
+  content        String
+  image          String?      // 可选的图片URL
+  createdAt      DateTime     @default(now())
+  senderId       Int
+  receiverId     Int?         // 接收者ID，对于群聊可为空
+  conversationId Int
+  isRead         Boolean      @default(false)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver       User?        @relation("MessageReceiver", fields: [receiverId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
 }

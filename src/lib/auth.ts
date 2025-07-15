@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { compare, hash } from 'bcryptjs';
+import { sign, verify } from 'jsonwebtoken';
 import { User, JWTPayload } from '../types/auth'
 import { prisma } from './prisma'
 import { cookies } from 'next/headers'
@@ -28,7 +28,7 @@ export async function verifyCredentials(userEmail: string, password: string): Pr
   if (!user) return null
 
   // 验证密码
-    const isValid = await bcrypt.compare(password, user.password)
+    const isValid = await compare(password, user.password)
   if (!isValid) return null
 
   // 返回用户信息（不包含密码）
@@ -55,13 +55,13 @@ export function generateToken(user: User): string {
     role: user.role,
   }
 
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN })
+  return sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN })
 }
 
 // 验证JWT令牌
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, getJwtSecret()) as JWTPayload
+    return verify(token, getJwtSecret()) as JWTPayload
   } catch (error) {
     console.error('令牌验证失败:', error)
     return null
@@ -119,5 +119,26 @@ export async function getUserFromRequest(request: Request): Promise<User | null>
 
 // 哈希密码 (用于创建新用户)
 export async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10)
+  return await hash(password, 10)
+} 
+
+// 验证用户身份并返回用户ID
+export async function authenticateUser(request: Request) {
+  try {
+    const token = request.headers.get('cookie')?.split(';')
+      .find(c => c.trim().startsWith('auth_token='))
+      ?.split('=')[1];
+    
+    if (!token) return null;
+    
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error('JWT密钥未配置');
+    
+    const decoded = verify(token, secret) as any;
+    
+    return decoded.id;
+  } catch (error) {
+    console.error('验证用户身份失败:', error);
+    return null;
+  }
 } 
