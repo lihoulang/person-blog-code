@@ -13,7 +13,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: false,
-  output: 'hybrid',  // 混合输出模式，支持静态和动态页面
+  output: 'standalone',  // 改为standalone模式，支持Vercel部署
   async rewrites() {
     return [
       {

@@ -1,183 +1,122 @@
+// 这个脚本只在构建时运行，不会在浏览器环境中执行
+// 因此可以安全使用Node.js的fs模块
+
 const fs = require('fs');
 const path = require('path');
+const { Feed } = require('feed');
 const { PrismaClient } = require('@prisma/client');
+
+// 初始化Prisma客户端
 const prisma = new PrismaClient();
 
-// 转义XML特殊字符
-function escapeXml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
+// 网站信息
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-blog-url.com';
+const siteTitle = '个人技术博客';
+const siteDescription = '分享Web开发、编程技术和个人见解';
+const siteAuthor = {
+  name: '博主',
+  email: 'example@example.com',
+  link: siteUrl
+};
 
-// 生成RSS 2.0格式的Feed
-function generateRssFeed(posts, baseUrl) {
-  const siteName = '个人博客';
-  const siteDescription = '分享技术、生活和思考';
-  const language = 'zh-cn';
-  const now = new Date().toUTCString();
-  
-  // 构建RSS头部
-  let rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-  <title>${siteName}</title>
-  <link>${baseUrl}</link>
-  <description>${siteDescription}</description>
-  <language>${language}</language>
-  <lastBuildDate>${now}</lastBuildDate>
-  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
-`;
-
-  // 添加每篇文章
-  posts.forEach(post => {
-    const postUrl = `${baseUrl}/blog/${post.slug}`;
-    const pubDate = new Date(post.date).toUTCString();
-    const description = post.description || '';
-    
-    rss += `
-  <item>
-    <title>${escapeXml(post.title)}</title>
-    <link>${postUrl}</link>
-    <guid>${postUrl}</guid>
-    <pubDate>${pubDate}</pubDate>
-    <description>${escapeXml(description)}</description>
-    ${post.content ? `<content:encoded><![CDATA[${post.content}]]></content:encoded>` : ''}
-    ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category>${escapeXml(tag)}</category>`).join('\n    ') : ''}
-  </item>`;
+// 创建Feed实例
+function createFeed() {
+  const feed = new Feed({
+    title: siteTitle,
+    description: siteDescription,
+    id: siteUrl,
+    link: siteUrl,
+    language: 'zh-CN',
+    image: `${siteUrl}/logo.png`,
+    favicon: `${siteUrl}/favicon.ico`,
+    copyright: `All rights reserved ${new Date().getFullYear()}, ${siteAuthor.name}`,
+    updated: new Date(),
+    generator: 'Feed for Node.js',
+    feedLinks: {
+      rss2: `${siteUrl}/rss.xml`,
+      atom: `${siteUrl}/atom.xml`,
+      json: `${siteUrl}/feed.json`,
+    },
+    author: siteAuthor
   });
-  
-  // 关闭RSS
-  rss += `
-</channel>
-</rss>`;
 
-  return rss;
+  return feed;
 }
 
-// 生成Atom 1.0格式的Feed
-function generateAtomFeed(posts, baseUrl) {
-  const siteName = '个人博客';
-  const siteDescription = '分享技术、生活和思考';
-  const authorName = '博客作者';
-  const authorEmail = 'author@example.com';
-  const now = new Date().toISOString();
-  
-  // 构建Atom头部
-  let atom = `<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>${siteName}</title>
-  <subtitle>${siteDescription}</subtitle>
-  <link href="${baseUrl}/atom.xml" rel="self" type="application/atom+xml" />
-  <link href="${baseUrl}" rel="alternate" type="text/html" />
-  <updated>${now}</updated>
-  <id>${baseUrl}/</id>
-  <author>
-    <name>${authorName}</name>
-    <email>${authorEmail}</email>
-  </author>
-`;
-
-  // 添加每篇文章
-  posts.forEach(post => {
-    const postUrl = `${baseUrl}/blog/${post.slug}`;
-    const updated = new Date(post.updatedAt || post.date).toISOString();
-    const published = new Date(post.date).toISOString();
-    const summary = post.description || '';
-    const author = post.author ? post.author : authorName;
-    
-    atom += `
-  <entry>
-    <title>${escapeXml(post.title)}</title>
-    <link href="${postUrl}" rel="alternate" type="text/html" />
-    <id>${postUrl}</id>
-    <published>${published}</published>
-    <updated>${updated}</updated>
-    <summary>${escapeXml(summary)}</summary>
-    ${post.content ? `<content type="html"><![CDATA[${post.content}]]></content>` : ''}
-    <author><name>${escapeXml(author)}</name></author>
-    ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category term="${escapeXml(tag)}" />`).join('\n    ') : ''}
-  </entry>`;
-  });
-  
-  // 关闭Atom
-  atom += `
-</feed>`;
-
-  return atom;
-}
-
-// 主函数
+// 从数据库获取文章并添加到Feed
 async function generateFeeds() {
   try {
-    console.log('开始生成RSS和Atom feed...');
+    console.log('开始生成RSS/Atom订阅源...');
     
-    // 从数据库获取已发布的文章
+    // 获取所有已发布的文章
     const posts = await prisma.post.findMany({
-      where: {
-        published: true
-      },
-      orderBy: {
-        date: 'desc'
-      },
-      take: 20,
+      where: { published: true },
       include: {
+        tags: true,
         author: {
           select: {
-            name: true
-          }
+            name: true,
+            email: true,
+          },
         },
-        tags: {
-          select: {
-            name: true
-          }
-        }
-      }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20, // 最新的20篇文章
     });
-    
-    // 格式化文章数据
-    const formattedPosts = posts.map(post => ({
-      title: post.title,
-      slug: post.slug,
-      date: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      content: post.content,
-      description: post.description,
-      tags: post.tags.map(tag => tag.name),
-      author: post.author?.name
-    }));
-    
-    // 获取网站基础URL
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    
-    // 生成RSS内容
-    const rssContent = generateRssFeed(formattedPosts, baseUrl);
-    
-    // 生成Atom内容
-    const atomContent = generateAtomFeed(formattedPosts, baseUrl);
-    
+
+    // 创建Feed实例
+    const feed = createFeed();
+
+    // 添加文章到Feed
+    posts.forEach(post => {
+      const url = `${siteUrl}/blog/${post.slug}`;
+      
+      feed.addItem({
+        title: post.title,
+        id: url,
+        link: url,
+        description: post.description,
+        content: post.content,
+        author: [
+          {
+            name: post.author?.name || siteAuthor.name,
+            email: post.author?.email || siteAuthor.email,
+            link: siteUrl
+          }
+        ],
+        date: post.createdAt,
+        image: post.coverImage,
+        category: post.tags.map(tag => ({
+          name: tag.name
+        }))
+      });
+    });
+
     // 确保public目录存在
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir, { recursive: true });
     }
-    
+
     // 写入RSS文件
-    fs.writeFileSync(path.join(publicDir, 'rss.xml'), rssContent);
-    console.log('RSS feed已生成: public/rss.xml');
-    
+    fs.writeFileSync(path.join(publicDir, 'rss.xml'), feed.rss2());
+    console.log('RSS文件已生成');
+
     // 写入Atom文件
-    fs.writeFileSync(path.join(publicDir, 'atom.xml'), atomContent);
-    console.log('Atom feed已生成: public/atom.xml');
-    
+    fs.writeFileSync(path.join(publicDir, 'atom.xml'), feed.atom1());
+    console.log('Atom文件已生成');
+
+    // 写入JSON Feed文件
+    fs.writeFileSync(path.join(publicDir, 'feed.json'), feed.json1());
+    console.log('JSON Feed文件已生成');
+
+    console.log('订阅源生成完成！');
   } catch (error) {
-    console.error('生成feed失败:', error);
-    process.exit(1);
+    console.error('生成订阅源时出错:', error);
   } finally {
+    // 关闭Prisma连接
     await prisma.$disconnect();
   }
 }

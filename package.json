@@ -6,11 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build && npm run generate:feeds",
-    "postinstall": "prisma generate",
-    "build:static": "node scripts/prepare-static.js && next build && node scripts/generate-static-api.js && node scripts/github-pages.js && node scripts/restore-app.js",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write .",
     "generate:feeds": "node scripts/generate-feeds.js"
   },
   "dependencies": {
@@ -19,6 +16,7 @@
     "@types/flexsearch": "^0.7.42",
     "bcryptjs": "^3.0.2",
     "date-fns": "^3.3.1",
+    "feed": "^5.1.0",
     "flexsearch": "^0.7.31",
     "gray-matter": "^4.0.3",
     "jose": "^6.0.11",
