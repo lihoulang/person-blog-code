@@ -100,31 +100,40 @@ export async function POST(request: Request) {
       }
     });
 
-    // 2. 同时保存到文件系统 (可选，保持兼容性)
-    const postsDirectory = path.join(process.cwd(), 'content/posts');
-    
-    // 确保目录存在
-    if (!fs.existsSync(postsDirectory)) {
-      fs.mkdirSync(postsDirectory, { recursive: true });
-    }
-    
-    const mdxContent = `---
+    // 2. 尝试保存到文件系统 (可选，如果失败不影响主功能)
+    let fileSystemSuccess = true;
+    try {
+      const postsDirectory = path.join(process.cwd(), 'content/posts');
+      
+      // 确保目录存在
+      if (!fs.existsSync(postsDirectory)) {
+        fs.mkdirSync(postsDirectory, { recursive: true });
+      }
+      
+      const mdxContent = `---
 title: ${title}
 description: ${description || ''}
 date: ${new Date().toISOString()}
-tags: [${tags.join(', ')}]
+tags: [${tags ? tags.join(', ') : ''}]
 author: ${user.name || 'Anonymous'}
 ---
 
 ${content}`;
 
-    const filePath = path.join(postsDirectory, `${slug}.mdx`);
-    fs.writeFileSync(filePath, mdxContent, 'utf8');
+      const filePath = path.join(postsDirectory, `${slug}.mdx`);
+      fs.writeFileSync(filePath, mdxContent, 'utf8');
+    } catch (fsError) {
+      console.error('保存到文件系统失败:', fsError);
+      fileSystemSuccess = false;
+    }
 
     return NextResponse.json({
       success: true,
       post,
-      message: '文章已成功保存到数据库并添加到文件系统'
+      fileSystemSuccess,
+      message: fileSystemSuccess 
+        ? '文章已成功保存到数据库并添加到文件系统' 
+        : '文章已成功保存到数据库，但保存到文件系统失败'
     });
 
   } catch (error) {

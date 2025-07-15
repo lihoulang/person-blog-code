@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verify } from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 
 // 强制此路由为动态路由
 export const dynamic = 'force-dynamic';
@@ -85,23 +86,37 @@ export async function POST(request: Request) {
     // 确保上传目录存在
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     
-    // 保存文件
-    const filePath = path.join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
-    
-    // 返回图片URL
-    const imageUrl = `/uploads/${fileName}`;
-    
-    return NextResponse.json({
-      success: true,
-      url: imageUrl,
-      message: '图片上传成功'
-    });
-
+    try {
+      // 检查目录是否存在，不存在则创建
+      if (!fs.existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+        console.log('上传目录已创建:', uploadDir);
+      }
+      
+      // 保存文件
+      const filePath = path.join(uploadDir, fileName);
+      await writeFile(filePath, buffer);
+      console.log('文件已保存:', filePath);
+      
+      // 返回图片URL
+      const imageUrl = `/uploads/${fileName}`;
+      
+      return NextResponse.json({
+        success: true,
+        url: imageUrl,
+        message: '图片上传成功'
+      });
+    } catch (fsError) {
+      console.error('文件系统操作失败:', fsError);
+      return NextResponse.json(
+        { error: '保存图片失败: ' + (fsError instanceof Error ? fsError.message : '未知错误') },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('图片上传失败:', error);
     return NextResponse.json(
-      { error: '图片上传失败' },
+      { error: '图片上传失败: ' + (error instanceof Error ? error.message : '未知错误') },
       { status: 500 }
     );
   }
