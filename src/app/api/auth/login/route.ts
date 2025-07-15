@@ -58,12 +58,16 @@ export async function POST(req: Request) {
     // 创建JWT
     const jwtSecret = process.env.JWT_SECRET;
 
-    // 生成令牌
+    // 获取用户角色，Prisma模型中可能有role字段
+    const userRole = 'role' in user ? (user as any).role : 'user';
+
+    // 生成令牌，添加用户角色字段
     const token = sign(
       { 
         id: user.id, 
         email: user.email,
-        name: user.name 
+        name: user.name,
+        role: userRole // 使用获取的角色或默认为'user'
       },
       jwtSecret,
       { expiresIn: '7d' }
