@@ -16,6 +16,7 @@ export interface Conversation {
   lastMessageAt: string;
   createdAt: string;
   lastMessage?: Message;
+  unreadCount?: number; // 未读消息计数
   otherUser?: {
     id: string;
     name: string;

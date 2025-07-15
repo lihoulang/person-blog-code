@@ -6,6 +6,7 @@ export interface User {
   password?: string // 仅在创建时使用，不应该返回给前端
   name: string
   role: 'admin' | 'author'
+  avatar?: string // 用户头像URL
   createdAt?: Date
   updatedAt?: Date
 }
@@ -48,4 +49,4 @@ export interface AuthContextType {
   updateProfile: (_data: ProfileUpdateData) => Promise<any>
   isLoading: boolean
   error: string | null
-} 
+}

@@ -103,29 +103,29 @@ export default function ShareButtons({
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap gap-3">
-        {shareButtons.map((button, index) => (
+    <div className="flex flex-wrap gap-3">
+      {shareButtons.map((button, index) => (
           <div key={index} className="relative group">
             {button.href ? (
-              <a
-                href={button.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-                aria-label={`分享到${button.name}`}
-              >
-                {button.icon}
-              </a>
-            ) : (
-              <button
-                onClick={button.onClick}
+          <a
+            href={button.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+            aria-label={`分享到${button.name}`}
+          >
+            {button.icon}
+          </a>
+        ) : (
+          <button
+            onClick={button.onClick}
                 className={`flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors ${
                   button.name === '复制链接' && copied ? 'bg-green-100 text-green-700' : ''
                 }`}
-                aria-label={button.name}
-              >
-                {button.icon}
-              </button>
+            aria-label={button.name}
+          >
+            {button.icon}
+          </button>
             )}
             {showText && (
               <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">

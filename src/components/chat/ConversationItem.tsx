@@ -47,12 +47,19 @@ export default function ConversationItem({
             {conversation.otherUser?.name ? conversation.otherUser.name.charAt(0).toUpperCase() : '?'}
           </div>
         )}
+        
+        {/* 未读消息标记 */}
+        {conversation.unreadCount && conversation.unreadCount > 0 && (
+          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+          </div>
+        )}
       </div>
       
       {/* 对话信息 */}
       <div className="ml-3 flex-grow overflow-hidden">
         <div className="flex justify-between items-center">
-          <h4 className="font-medium text-gray-900 truncate">
+          <h4 className={`font-medium truncate ${conversation.unreadCount && conversation.unreadCount > 0 ? 'text-black font-semibold' : 'text-gray-900'}`}>
             {conversation.otherUser?.name || '未知用户'}
           </h4>
           {formattedTime && (
@@ -62,7 +69,7 @@ export default function ConversationItem({
         
         {/* 最后一条消息预览 */}
         {conversation.lastMessage && (
-          <p className="text-sm text-gray-600 truncate mt-1">
+          <p className={`text-sm truncate mt-1 ${conversation.unreadCount && conversation.unreadCount > 0 ? 'text-black font-medium' : 'text-gray-600'}`}>
             {conversation.lastMessage.content}
           </p>
         )}

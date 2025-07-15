@@ -56,3 +56,45 @@ export default function UserPostsPage() {
     </div>
   );
 } 
+      <div className="flex space-x-4 mb-6">
+        <Link 
+          href="/profile" 
+          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+        >
+          我的资料
+        </Link>
+        <Link 
+          href="/profile/posts" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+          我的文章
+        </Link>
+        <Link 
+          href="/profile/bookmarks" 
+          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+        >
+          我的收藏
+        </Link>
+      </div>
+      
+      <div className="bg-white shadow rounded-lg p-6">
+        {posts.length > 0 ? (
+          <div className="divide-y">
+            {/* 这里应该渲染文章列表，但目前只是示例 */}
+            <p>您还没有发布任何文章。</p>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">您还没有发布任何文章。</p>
+            <Link 
+              href="/posts/create" 
+              className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              写第一篇文章
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+} 

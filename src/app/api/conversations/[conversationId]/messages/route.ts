@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { SendMessageRequest } from '@/types/chat';
+import { sendPrivateMessage } from '@/lib/socket';
 
 // 获取特定对话的消息
 export async function GET(
@@ -58,6 +59,7 @@ export async function GET(
       createdAt: message.createdAt.toISOString(),
       senderId: message.senderId.toString(),
       receiverId: message.receiverId?.toString(),
+      conversationId: message.conversationId.toString(),
       senderName: message.sender.name,
       senderAvatar: message.sender.avatar,
       isRead: message.isRead
@@ -134,10 +136,20 @@ export async function POST(
       createdAt: message.createdAt.toISOString(),
       senderId: message.senderId.toString(),
       receiverId: message.receiverId?.toString(),
+      conversationId: message.conversationId.toString(),
       senderName: message.sender.name,
       senderAvatar: message.sender.avatar,
       isRead: message.isRead
     };
+    
+    // 通过Socket.IO发送实时通知
+    try {
+      // 给接收者发送新消息通知
+      sendPrivateMessage(receiverId, 'new_message', formattedMessage);
+    } catch (socketError) {
+      console.error('发送Socket通知失败:', socketError);
+      // 即使Socket通知失败，我们仍然继续处理请求
+    }
     
     return NextResponse.json({ message: formattedMessage });
   } catch (error) {

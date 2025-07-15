@@ -4,9 +4,11 @@
   "private": true,
   "homepage": "https://lihoulang.github.io/person-blog",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
+    "dev:next": "next dev",
     "build": "prisma generate && next build && npm run generate:feeds",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
+    "start:next": "next start",
     "lint": "next lint",
     "generate:feeds": "node scripts/generate-feeds.js"
   },
@@ -31,6 +33,8 @@
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "slugify": "^1.6.6",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

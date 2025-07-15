@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 获取对话中的其他用户信息
+    // 获取对话中的其他用户信息和未读消息计数
     const conversationsWithUsers = await Promise.all(
       conversations.map(async (conversation) => {
         // 找出对话中的另一个用户ID
@@ -50,10 +50,20 @@ export async function GET(request: NextRequest) {
           }
         });
         
+        // 计算未读消息数量
+        const unreadCount = await prisma.message.count({
+          where: {
+            conversationId: conversation.id,
+            receiverId: parseInt(userId.toString()),
+            isRead: false
+          }
+        });
+        
         return {
           ...conversation,
           lastMessage: conversation.messages[0] || null,
           messages: undefined, // 移除原始消息数组
+          unreadCount,
           otherUser: otherUser ? {
             id: otherUser.id.toString(),
             name: otherUser.name,
@@ -130,3 +140,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '创建对话失败' }, { status: 500 });
   }
 } 
+ 
+ 

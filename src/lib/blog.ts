@@ -291,4 +291,16 @@ export async function getPostsByTag(tag: string): Promise<Post[]> {
     console.error(`获取标签 ${tag} 的文章失败:`, error);
     return [];
   }
-} 
+      title: post.title,
+      date: post.createdAt.toISOString().split('T')[0],
+      slug: post.slug,
+      description: post.description || '',
+      content: post.content,
+      tags: post.tags.map(tag => tag.name),
+      viewCount: post.viewCount,
+      author: post.author?.name || 'Unknown',
+    }));
+  } catch (error) {
+    console.error(`获取标签 ${tag} 的文章失败:`, error);
+    return [];
+  }

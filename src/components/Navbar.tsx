@@ -11,6 +11,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   
   // 使用AuthContext
   const { user, logout } = useAuth();
@@ -19,6 +20,33 @@ export default function Navbar() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // 获取未读消息数量
+  useEffect(() => {
+    if (user) {
+      fetchUnreadMessagesCount();
+      
+      // 每60秒检查一次未读消息
+      const interval = setInterval(fetchUnreadMessagesCount, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  // 获取未读消息数量
+  const fetchUnreadMessagesCount = async () => {
+    try {
+      const response = await fetch('/api/messages/unread-count', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadMessagesCount(data.count);
+      }
+    } catch (error) {
+      console.error('获取未读消息数量失败:', error);
+    }
+  };
 
   // 处理点击外部关闭菜单
   useEffect(() => {
@@ -53,6 +81,12 @@ export default function Navbar() {
     if (user) {
       return [
         { href: '/profile', label: '个人资料', show: true },
+        { 
+          href: '/profile/messages', 
+          label: '我的消息', 
+          show: true,
+          badge: unreadMessagesCount > 0 ? unreadMessagesCount : null
+        },
         { href: '/profile/bookmarks', label: '我的收藏', show: true },
         { href: '/profile/posts', label: '我的文章', show: true },
         { href: '/posts/create', label: '写新文章', show: true },
@@ -115,6 +149,11 @@ export default function Navbar() {
                     <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
+                    {unreadMessagesCount > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </div>
+                    )}
                   </button>
 
                   {/* 用户菜单 */}
@@ -134,10 +173,15 @@ export default function Navbar() {
                               if (link.onClick) link.onClick();
                               setShowUserMenu(false);
                             }}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 relative"
                             role="menuitem"
                           >
                             {link.label}
+                            {link.badge && (
+                              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                {link.badge > 9 ? '9+' : link.badge}
+                              </span>
+                            )}
                           </Link>
                         )
                       )}
@@ -180,6 +224,11 @@ export default function Navbar() {
                 <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
+              )}
+              {unreadMessagesCount > 0 && (
+                <div className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                </div>
               )}
             </button>
           </div>

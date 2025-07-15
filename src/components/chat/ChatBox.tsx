@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Message, Conversation } from '@/types/chat';
 import MessageItem from './MessageItem';
 import { toast } from 'react-toastify';
+import { useSocket } from '@/hooks/useSocket';
 
 interface ChatBoxProps {
   conversation: Conversation;
@@ -13,6 +14,7 @@ interface ChatBoxProps {
 
 export default function ChatBox({ conversation, onMessageSent }: ChatBoxProps) {
   const { user } = useAuth();
+  const { on, off } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [inputValue, setInputValue] = useState('');
@@ -30,6 +32,29 @@ export default function ChatBox({ conversation, onMessageSent }: ChatBoxProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 监听新消息
+  useEffect(() => {
+    if (!conversation?.id) return;
+
+    // 监听来自此对话的新消息
+    const handleNewMessage = (message: Message) => {
+      if (message.conversationId === conversation.id) {
+        setMessages(prev => [...prev, message]);
+      }
+    };
+
+    // 注册Socket事件监听
+    const unsubscribe = on('new_message', handleNewMessage);
+
+    // 清理函数
+    return () => {
+      off('new_message', handleNewMessage);
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [conversation?.id, on, off]);
 
   // 获取对话消息
   const fetchMessages = async () => {
@@ -126,9 +151,9 @@ export default function ChatBox({ conversation, onMessageSent }: ChatBoxProps) {
                 key={message.id}
                 content={message.content}
                 timestamp={message.createdAt}
-                isOwn={message.senderId === user?.id.toString()}
-                senderName={message.senderId === user?.id.toString() ? undefined : conversation?.otherUser?.name}
-                senderAvatar={message.senderId === user?.id.toString() ? user?.avatar : conversation?.otherUser?.avatar}
+                isOwn={message.senderId === user?.id?.toString()}
+                senderName={message.senderId === user?.id?.toString() ? undefined : conversation?.otherUser?.name}
+                senderAvatar={message.senderId === user?.id?.toString() ? user?.avatar : conversation?.otherUser?.avatar}
                 isRead={message.isRead}
               />
             ))}

@@ -218,3 +218,22 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound();
   }
 } 
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        
+        {/* 评论区 */}
+          <Comments postId={post.id} postSlug={post.slug} />
+        </div>
+        
+        {/* 文章阅读追踪组件 */}
+        <PostViewTracker postId={post.id} />
+      </div>
+    );
+  } catch (error) {
+    console.error('渲染文章页面失败:', error);
+    notFound();
+  }
+} 
