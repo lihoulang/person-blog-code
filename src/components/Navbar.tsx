@@ -43,6 +43,7 @@ export default function Navbar() {
     { href: '/', label: '首页' },
     { href: '/blog', label: '博客' },
     { href: '/tags', label: '标签' },
+    { href: '/roadmap', label: '项目规划' },
     { href: '/changelog', label: '更新日志' },
     { href: '/about', label: '关于' },
   ];
