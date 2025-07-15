@@ -7,6 +7,21 @@ import { serialize } from 'next-mdx-remote/serialize';
 const POSTS_PATH = path.join(process.cwd(), 'content/posts');
 const AUTHORS_PATH = path.join(process.cwd(), 'content/authors');
 
+// 定义博客文章元数据类型
+export interface PostMetadata {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  formattedDate?: string;
+  description?: string;
+  content?: string;
+  tags?: string[];
+  coverImage?: string;
+  author?: string;
+  viewCount?: number;
+}
+
 // 定义文章和作者的类型
 export interface PostFrontMatter {
   title: string;
