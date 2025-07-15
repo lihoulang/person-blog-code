@@ -54,6 +54,8 @@ export default function Navbar() {
       return [
         { href: '/profile', label: '个人资料', show: true },
         { href: '/profile/bookmarks', label: '我的收藏', show: true },
+        { href: '/profile/posts', label: '我的文章', show: true },
+        { href: '/posts/create', label: '写新文章', show: true },
         { href: '/admin/posts', label: '文章管理', show: user.role === 'admin' },
         { href: '/admin/changelog', label: '更新日志', show: user.role === 'admin' },
         { href: '#', label: '登出', onClick: () => logout(), show: true },
@@ -187,7 +189,7 @@ export default function Navbar() {
       {/* 移动菜单 - 使用过渡动画 */}
       <div 
         ref={mobileMenuRef}
-        className={`md:hidden fixed inset-y-0 right-0 w-64 bg-white dark:bg-gray-900 shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`md:hidden fixed inset-y-0 right-0 w-full sm:w-80 bg-white dark:bg-gray-900 shadow-lg transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -202,6 +204,11 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+          
+          {/* 移动端搜索框 */}
+          <div className="mb-6">
+            <SearchBar placeholder="搜索文章..." />
           </div>
 
           <div className="space-y-1">
@@ -223,43 +230,58 @@ export default function Navbar() {
           {/* 用户链接 - 移动版 */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 space-y-1">
             {user ? (
-              userLinks.map((link, index) => 
-                link.show && (
-                  <Link
-                    key={link.href + index}
-                    href={link.href}
-                    onClick={link.onClick}
-                    className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800"
-                  >
-                    {link.label}
-                  </Link>
-                )
-              )
-            ) : (
               <>
+                <div className="flex items-center px-3 py-3">
+                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white mr-3">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {user.name || user.email}
+                  </div>
+                </div>
+                {userLinks.map((link, index) => 
+                  link.show && (
+                    <Link
+                      key={link.href + index}
+                      href={link.href}
+                      onClick={link.onClick}
+                      className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800"
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col space-y-2">
                 <Link
                   href="/auth/login"
-                  className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  className="block px-3 py-3 rounded-md text-base font-medium text-center text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-gray-300"
                 >
                   登录
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  className="block px-3 py-3 rounded-md text-base font-medium text-center text-white bg-blue-600 hover:bg-blue-700"
                 >
                   注册
                 </Link>
-              </>
+              </div>
             )}
           </div>
-
-          <div className="mt-6">
-            <SearchBar className="w-full" />
+          
+          {/* 移动端底部信息 */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mb-2">© 2025 个人博客</p>
+            <div className="flex space-x-4">
+              <Link href="/privacy" className="hover:text-blue-600">隐私政策</Link>
+              <Link href="/terms" className="hover:text-blue-600">使用条款</Link>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* 背景遮罩 - 点击时关闭菜单 */}
+      {/* 移动菜单背景遮罩 */}
       {isMobileMenuOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"

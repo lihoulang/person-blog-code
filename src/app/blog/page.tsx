@@ -22,20 +22,20 @@ export default async function BlogPage() {
   }));
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* 博客页面头部 */}
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-4">博客文章</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+      <div className="mb-8 sm:mb-10 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">博客文章</h1>
+        <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
           探索我的最新文章和想法，涵盖技术、开发和个人成长等各种话题。
         </p>
       </div>
 
       {/* 特色文章 - 使用Next.js的Image组件 */}
       {postsWithCovers.length > 0 && (
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">特色文章</h2>
-          <div className="relative h-[400px] rounded-xl overflow-hidden">
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">特色文章</h2>
+          <div className="relative h-[250px] sm:h-[300px] md:h-[400px] rounded-xl overflow-hidden">
             <Image
               src={postsWithCovers[0].coverImage}
               alt={postsWithCovers[0].title}
@@ -44,23 +44,23 @@ export default async function BlogPage() {
               className="object-cover"
               priority={true}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
-              <h3 className="text-3xl font-bold text-white mb-2">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4 sm:p-6">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
                 <Link href={`/blog/${postsWithCovers[0].slug}`} className="hover:underline">
                   {postsWithCovers[0].title}
                 </Link>
               </h3>
-              <p className="text-white/80 mb-4 line-clamp-2">{postsWithCovers[0].description}</p>
-              <div className="flex gap-2 mb-2">
-                {postsWithCovers[0].tags?.map((tag: string) => (
-                  <span key={tag} className="bg-white/20 text-white px-3 py-1 text-sm rounded-full">
+              <p className="text-white/80 mb-3 text-sm sm:text-base line-clamp-2">{postsWithCovers[0].description}</p>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {postsWithCovers[0].tags?.slice(0, 3).map((tag: string) => (
+                  <span key={tag} className="bg-white/20 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full">
                     {tag}
                   </span>
                 ))}
               </div>
               <Link 
                 href={`/blog/${postsWithCovers[0].slug}`}
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors mt-2"
+                className="inline-block bg-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm rounded-md hover:bg-blue-700 transition-colors mt-2"
               >
                 阅读文章
               </Link>
@@ -70,7 +70,7 @@ export default async function BlogPage() {
       )}
       
       {/* 文章列表 - 使用PostCard组件 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {postsWithCovers.slice(1).map(post => (
           <PostCard key={post.slug} post={post} />
         ))}
