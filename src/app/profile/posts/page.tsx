@@ -38,7 +38,7 @@ export default function UserPostsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">我的文章</h1>
         <Link 
-          href="/posts/new" 
+          href="/admin/posts/new" 
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
         >
           写新文章
@@ -76,7 +76,7 @@ export default function UserPostsPage() {
           <div className="text-center py-8">
             <p className="text-gray-500">您还没有发布任何文章。</p>
             <Link 
-              href="/posts/new" 
+              href="/admin/posts/new" 
               className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
             >
               写第一篇文章
