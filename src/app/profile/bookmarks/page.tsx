@@ -29,6 +29,7 @@ export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<BookmarkedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
+  const activeTab = 'bookmarks';
 
   // 加载用户收藏
   useEffect(() => {
@@ -110,55 +111,58 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">个人中心</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">个人中心</h1>
       
       {/* 导航标签 */}
-      <div className="flex space-x-4 mb-6 border-b border-gray-200">
-        <Link 
-          href="/profile" 
-          className="px-4 py-2 font-medium text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          我的资料
-        </Link>
-        <Link 
-          href="/profile/posts" 
-          className="px-4 py-2 font-medium text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          我的文章
-        </Link>
-        <Link 
-          href="/profile/bookmarks" 
-          className="px-4 py-2 font-medium text-sm text-blue-600 border-b-2 border-blue-600 transition-colors"
-        >
-          我的收藏
-        </Link>
-        <Link 
-          href="/profile/likes" 
-          className="px-4 py-2 font-medium text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          我的点赞
-        </Link>
-        <Link 
-          href="/profile/comments" 
-          className="px-4 py-2 font-medium text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          我的评论
-        </Link>
+      <div className="flex justify-center border-b border-gray-200 mb-8">
+        <div className="flex space-x-8">
+          <Link 
+            href="/profile" 
+            className="px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            我的资料
+          </Link>
+          <Link 
+            href="/profile/posts" 
+            className="px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            我的文章
+          </Link>
+          <Link 
+            href="/profile/bookmarks" 
+            className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'bookmarks' 
+                ? 'border-blue-600 text-blue-600' 
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            我的收藏
+          </Link>
+          <Link 
+            href="/profile/likes" 
+            className="px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            我的点赞
+          </Link>
+          <Link 
+            href="/profile/comments" 
+            className="px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            我的评论
+          </Link>
+        </div>
       </div>
       
-      {/* 收藏列表 */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">我的收藏</h2>
-          <p className="text-gray-500 text-sm mt-1">管理您收藏的文章</p>
-        </div>
+      <div className="max-w-3xl mx-auto">
+        <h2 className="text-xl font-medium mb-6">我的收藏</h2>
         
-        <div className="p-6">
+        {/* 收藏列表 */}
+        <div className="bg-white rounded-lg shadow-sm p-8">
           {bookmarks.length > 0 ? (
             <div className="grid grid-cols-1 gap-6">
               {bookmarks.map((bookmark) => (
-                <div key={bookmark.id} className="flex border border-gray-200 rounded-lg overflow-hidden">
+                <div key={bookmark.id} className="flex border border-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                   {/* 文章封面图 */}
                   <div className="w-1/4 relative h-auto min-h-[120px]">
                     <Image
@@ -171,7 +175,7 @@ export default function BookmarksPage() {
                   </div>
                   
                   {/* 文章信息 */}
-                  <div className="w-3/4 p-4 flex flex-col">
+                  <div className="w-3/4 p-5 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                       <Link 
                         href={`/blog/${bookmark.post.slug}`}
@@ -202,7 +206,7 @@ export default function BookmarksPage() {
                         </span>
                       </div>
                       
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-4">
                         <Link 
                           href={`/blog/${bookmark.post.slug}`}
                           className="text-sm text-blue-600 hover:underline"
@@ -225,11 +229,11 @@ export default function BookmarksPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>您还没有收藏任何文章</p>
+            <div className="text-center py-10 text-gray-500">
+              <p className="mb-4">您还没有收藏任何文章</p>
               <Link 
                 href="/blog"
-                className="mt-2 inline-block text-blue-600 hover:underline"
+                className="inline-block px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 浏览文章并添加收藏
               </Link>

@@ -78,87 +78,98 @@ export default function ProfileForm() {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          姓名
-        </label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          邮箱
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-      
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="text-lg font-medium text-gray-900">修改密码</h3>
-        <p className="text-sm text-gray-500 mb-4">如需修改密码，请填写以下字段</p>
-        
-        <div>
-          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-            当前密码
-          </label>
-          <input
-            id="currentPassword"
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          />
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              姓名
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="请输入您的姓名"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              邮箱
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="请输入您的邮箱地址"
+            />
+          </div>
         </div>
         
-        <div className="mt-4">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-            新密码
-          </label>
-          <input
-            id="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="border-t border-gray-100 pt-6 mt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">修改密码</h3>
+          <p className="text-sm text-gray-500 mb-4">如需修改密码，请填写以下字段</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                当前密码
+              </label>
+              <input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="请输入当前密码"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                新密码
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="请输入新密码"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                确认新密码
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="请再次输入新密码"
+              />
+            </div>
+          </div>
         </div>
         
-        <div className="mt-4">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-            确认新密码
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+              isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
+          >
+            {isSubmitting ? '保存中...' : '保存更改'}
+          </button>
         </div>
-      </div>
-      
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-            isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-          }`}
-        >
-          {isSubmitting ? '保存中...' : '保存更改'}
-        </button>
       </div>
     </form>
   );
