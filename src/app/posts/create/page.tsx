@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import ImageUploader from '@/components/ImageUploader';
 
 export default function CreatePostPage() {
   const [title, setTitle] = useState('');
@@ -14,6 +15,31 @@ export default function CreatePostPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 处理图片上传成功
+  const handleImageUploaded = (imageUrl: string) => {
+    // 在当前光标位置插入Markdown图片语法
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const imageMarkdown = `![图片描述](${imageUrl})`;
+      
+      const newContent = content.substring(0, start) + imageMarkdown + content.substring(end);
+      setContent(newContent);
+      
+      // 设置光标位置到插入内容之后
+      setTimeout(() => {
+        textarea.focus();
+        textarea.selectionStart = start + imageMarkdown.length;
+        textarea.selectionEnd = start + imageMarkdown.length;
+      }, 0);
+    } else {
+      // 如果没有焦点，则在内容末尾添加
+      setContent(content + `\n\n![图片描述](${imageUrl})`);
+    }
+  };
 
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,11 +182,20 @@ export default function CreatePostPage() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            图片上传
+          </label>
+          <ImageUploader onImageUploaded={handleImageUploaded} />
+          <p className="text-sm text-gray-500 mt-1">上传图片后会自动插入到内容中</p>
+        </div>
+
+        <div>
           <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
             内容 *
           </label>
           <textarea
             id="content"
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
