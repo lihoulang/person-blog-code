@@ -1,10 +1,28 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Metadata } from 'next';
 import PostCard from '@/components/PostCard';
 import { getAllPosts } from '@/lib/blog';
+import SEO from '@/components/SEO';
+import { generateBreadcrumbSchema } from '@/lib/seo';
 
 // 设置为服务端渲染
 export const dynamic = 'force-dynamic';
+
+// 添加元数据
+export const metadata: Metadata = {
+  title: '博客文章',
+  description: '探索我的最新文章和想法，涵盖技术、开发和个人成长等各种话题。',
+  alternates: {
+    canonical: '/blog',
+  },
+  openGraph: {
+    title: '博客文章 - 个人博客',
+    description: '探索我的最新文章和想法，涵盖技术、开发和个人成长等各种话题。',
+    url: '/blog',
+    type: 'website',
+  }
+};
 
 export default async function BlogPage() {
   // 获取所有文章
@@ -20,9 +38,34 @@ export default async function BlogPage() {
       day: 'numeric'
     })
   }));
+  
+  // 生成面包屑导航结构化数据
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: '首页', url: '/' },
+    { name: '博客', url: '/blog' }
+  ]);
+  
+  // 创建文章列表结构化数据
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: postsWithCovers.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/blog/${post.slug}`,
+      name: post.title,
+      description: post.description
+    }))
+  };
+  
+  // 合并结构化数据
+  const structuredData = [breadcrumbSchema, itemListSchema];
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">
+      {/* 添加SEO组件 */}
+      <SEO structuredData={structuredData} />
+      
       {/* 博客页面头部 */}
       <div className="mb-8 sm:mb-10 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">博客文章</h1>

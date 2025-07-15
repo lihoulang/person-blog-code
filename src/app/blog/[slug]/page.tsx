@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { getPostBySlug, getAllPosts, getRelatedPosts } from '@/lib/blog';
+import { getPostBySlug, getRelatedPosts } from '@/lib/blog';
 import PostViewTracker from '@/components/PostViewTracker';
 import Comments from '@/components/Comments';
 import ShareButtons from '@/components/ShareButtons';
 import PostActions from '@/components/PostActions';
+import { generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
+import SEO from '@/components/SEO';
 
 interface PostPageProps {
   params: {
@@ -37,12 +39,23 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     description: post.description || `阅读关于${post.title}的文章`,
     openGraph: {
       title: post.title,
-    description: post.description,
+      description: post.description,
       type: 'article',
       publishedTime: post.date,
       authors: ['博主'],
       tags: post.tags,
     },
+    // 添加更多SEO相关元数据
+    alternates: {
+      canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog/${post.slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.description,
+      creator: '@yourtwitterhandle',
+    },
+    keywords: post.tags?.join(', '),
   };
 }
 
@@ -56,9 +69,25 @@ export default async function PostPage({ params }: PostPageProps) {
   // 获取相关文章
   const relatedPosts = await getRelatedPosts(post, 3);
   
+  // 生成结构化数据
+  const articleSchema = generateArticleSchema(post);
+  
+  // 生成面包屑导航结构化数据
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: '首页', url: '/' },
+    { name: '博客', url: '/blog' },
+    { name: post.title, url: `/blog/${post.slug}` }
+  ]);
+  
+  // 合并结构化数据
+  const structuredData = [articleSchema, breadcrumbSchema];
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        {/* 添加SEO组件 */}
+        <SEO structuredData={structuredData} />
+        
         {/* 页面导航 */}
         <div className="mb-6">
           <nav className="flex" aria-label="Breadcrumb">
@@ -118,9 +147,15 @@ export default async function PostPage({ params }: PostPageProps) {
         </div>
         
         {/* 文章内容 */}
-        <div className="prose prose-lg max-w-none mb-10">
-          <div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
-        </div>
+        <article className="prose prose-lg max-w-none mb-10" itemScope itemType="https://schema.org/BlogPosting">
+          <meta itemProp="headline" content={post.title} />
+          <meta itemProp="datePublished" content={post.date} />
+          <meta itemProp="dateModified" content={post.date} />
+          {post.description && <meta itemProp="description" content={post.description} />}
+          {post.author && <meta itemProp="author" content={post.author} />}
+          
+          <div itemProp="articleBody" dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+        </article>
         
         {/* 点赞和收藏功能 */}
         <PostActions postId={post.id} />
