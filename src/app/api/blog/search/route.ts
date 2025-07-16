@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchPosts } from '@/lib/search';
-import { getAllPosts } from '@/lib/blog';
+import { getAllPosts, getLatestPosts } from '@/lib/blog';
 
 /**
  * 处理博客搜索请求的API路由
@@ -20,7 +20,9 @@ export async function GET(req: NextRequest) {
     const minComments = url.searchParams.get('minComments') || ''; // 新增：按最少评论数过滤
     
     if (!query && !tag && !dateFrom && !dateTo && !author && !readTime && !minComments) {
-      return NextResponse.json({ results: [] });
+      // 推荐最新文章
+      const recommended = await getLatestPosts(3);
+      return NextResponse.json({ results: [], recommended });
     }
     
     // 执行搜索
@@ -33,10 +35,22 @@ export async function GET(req: NextRequest) {
     
     // 将搜索结果与完整的文章数据合并
     results = results.map(result => {
-      const fullPost = allPosts.find(post => post.slug === result.doc?.slug || post.slug === result.slug);
+      // result 可能是 SearchablePost & { snippet } 或 Post
+      const slug = (result as any).slug || (result as any).doc?.slug || '';
+      const fullPost = allPosts.find(post => post.slug === slug) || {};
+      // 合并所有字段，保证类型安全
       return {
-        ...result.doc,
-        ...fullPost
+        id: (fullPost as any).id || (result as any).id || '',
+        title: (fullPost as any).title || (result as any).title || '',
+        slug: slug,
+        date: (fullPost as any).date || (result as any).date || '',
+        content: (fullPost as any).content || (result as any).content || '',
+        description: (fullPost as any).description || (result as any).description || '',
+        tags: (fullPost as any).tags || (result as any).tags || [],
+        author: (fullPost as any).author || (result as any).author || '',
+        viewCount: (fullPost as any).viewCount || (result as any).viewCount || 0,
+        coverImage: (fullPost as any).coverImage || (result as any).coverImage || '',
+        snippet: (result as any).snippet || ''
       };
     });
     
@@ -128,9 +142,14 @@ export async function GET(req: NextRequest) {
     
     // 记录搜索时间
     const timestamp = new Date().toISOString();
-    
+    // 若无结果，推荐最新文章
+    let recommended = [];
+    if (results.length === 0) {
+      recommended = await getLatestPosts(3);
+    }
     return NextResponse.json({
       results,
+      recommended,
       meta: {
         count: results.length,
         query,

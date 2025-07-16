@@ -24,6 +24,8 @@ export default function SearchBar({
   const [query, setQuery] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   
   // 当initialValue变化时更新query
   useEffect(() => {
@@ -36,6 +38,29 @@ export default function SearchBar({
       inputRef.current.focus();
     }
   }, [autoFocus]);
+
+  // 加载历史
+  useEffect(() => {
+    const raw = localStorage.getItem('search_history');
+    if (raw) {
+      setHistory(JSON.parse(raw));
+    }
+  }, []);
+
+  // 保存历史
+  const saveHistory = (q: string) => {
+    if (!q) return;
+    let arr = [q, ...history.filter(item => item !== q)];
+    if (arr.length > 10) arr = arr.slice(0, 10);
+    setHistory(arr);
+    localStorage.setItem('search_history', JSON.stringify(arr));
+  };
+
+  // 清空历史
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('search_history');
+  };
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -43,6 +68,7 @@ export default function SearchBar({
     const trimmedQuery = query.trim();
     
     if (trimmedQuery) {
+      saveHistory(trimmedQuery);
       // 如果提供了onSearch回调，使用它
       if (onSearch) {
         onSearch(trimmedQuery);
@@ -51,15 +77,22 @@ export default function SearchBar({
         router.push(`/blog/search?q=${encodeURIComponent(trimmedQuery)}`);
       }
     }
+    setShowHistory(false);
   };
   
   const handleChange = (value: string) => {
     setQuery(value);
+    setShowHistory(true);
     
     // 如果提供了onSearch回调，在用户输入时触发
     if (onSearch && value.trim().length >= 2) {
       onSearch(value);
     }
+  };
+
+  // 失焦时延迟隐藏历史，避免点击事件丢失
+  const handleBlur = () => {
+    setTimeout(() => setShowHistory(false), 150);
   };
   
   // 获取当前时间，精确到秒
@@ -80,6 +113,8 @@ export default function SearchBar({
           type="text"
           value={query}
           onChange={(e) => handleChange(e.target.value)}
+          onFocus={() => setShowHistory(true)}
+          onBlur={handleBlur}
           placeholder={placeholder}
           className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
@@ -213,6 +248,24 @@ export default function SearchBar({
               高级搜索页面
             </button>
           </div>
+        </div>
+      )}
+      {/* 搜索历史下拉建议 */}
+      {showHistory && history.length > 0 && (
+        <div className="absolute left-0 right-0 top-12 z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg max-h-60 overflow-y-auto">
+          <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+            <span className="text-xs text-gray-500">搜索历史</span>
+            <button onClick={clearHistory} className="text-xs text-blue-500 hover:underline">清空</button>
+          </div>
+          {history.map((item, idx) => (
+            <div
+              key={item + idx}
+              className="px-4 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-200"
+              onMouseDown={() => { setQuery(item); setShowHistory(false); }}
+            >
+              {item}
+            </div>
+          ))}
         </div>
       )}
     </div>

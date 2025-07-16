@@ -20,12 +20,13 @@ function SearchResults() {
   const readTime = searchParams.get('readTime') || ''
   const minComments = searchParams.get('minComments') || ''
   
-  const [results, setResults] = useState<Post[]>([])
+  const [results, setResults] = useState<(Post & { snippet?: string })[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [tags, setTags] = useState<{name: string, count: number}[]>([])
   const [authors, setAuthors] = useState<{name: string, count: number}[]>([])
   const [showFilters, setShowFilters] = useState(false)
+  const [recommended, setRecommended] = useState<(Post & { snippet?: string })[]>([])
   
   // 获取所有标签
   useEffect(() => {
@@ -68,6 +69,7 @@ function SearchResults() {
     const search = async () => {
       if (!query && !tag && !dateFrom && !dateTo && !author && !readTime && !minComments) {
         setResults([])
+        setRecommended([])
         return
       }
       
@@ -95,6 +97,7 @@ function SearchResults() {
         
         const data = await response.json()
         setResults(data.results)
+        setRecommended(data.recommended || [])
       } catch (err) {
         setError('搜索时出错，请稍后再试')
         console.error(err)
@@ -166,6 +169,22 @@ function SearchResults() {
     minute: '2-digit',
     second: '2-digit'
   })
+  
+  // 高亮关键词函数
+  function highlightText(text: string, keyword: string) {
+    if (!keyword) return text;
+    // 支持多关键词，按空格分割
+    const keywords = keyword.trim().split(/\s+/).filter(Boolean);
+    if (keywords.length === 0) return text;
+    // 构造正则，忽略大小写，支持中英文
+    const pattern = new RegExp(`(${keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+    // 替换为<mark>标签，防止XSS
+    return text.split(pattern).map((part, i) =>
+      keywords.some(k => k && part.toLowerCase() === k.toLowerCase())
+        ? <mark key={i} className="bg-yellow-200 text-yellow-900 px-1 rounded">{part}</mark>
+        : part
+    );
+  }
   
   return (
     <div>
@@ -400,7 +419,7 @@ function SearchResults() {
                   <div className="p-6">
                     <h2 className="text-xl font-semibold mb-2">
                       <Link href={`/blog/${post.slug}`} className="hover:text-blue-600 transition">
-                        {post.title}
+                        {highlightText(post.title, query)}
                       </Link>
                     </h2>
                     <div className="text-gray-500 text-sm mb-3">
@@ -415,7 +434,12 @@ function SearchResults() {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-700 mb-4">{post.description}</p>
+                    <p className="text-gray-700 mb-4">{highlightText(post.description || '', query)}</p>
+                    {post.snippet && (
+                      <p className="text-gray-600 text-sm mb-2 border-l-4 border-yellow-200 pl-3 italic">
+                        {highlightText(post.snippet, query)}
+                      </p>
+                    )}
                     
                     {post.tags && post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
@@ -447,6 +471,29 @@ function SearchResults() {
               <div className="text-center py-8">
                 <p className="text-gray-500">没有找到匹配的结果</p>
                 <p className="mt-2 text-gray-500">尝试使用不同的关键词或<Link href="/blog" className="text-blue-600 hover:underline">查看所有文章</Link></p>
+                {recommended.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-700">为你推荐</h3>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {recommended.map(post => (
+                        <div key={post.slug} className="border rounded-lg p-4 bg-white shadow-sm text-left">
+                          <Link href={`/blog/${post.slug}`} className="block text-blue-700 font-bold text-base mb-2 hover:underline">
+                            {post.title}
+                          </Link>
+                          <div className="text-xs text-gray-500 mb-1">{new Date(post.date).toLocaleDateString('zh-CN')}</div>
+                          <div className="text-gray-600 text-sm mb-2 line-clamp-2">{post.description}</div>
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {post.tags.map(tag => (
+                                <span key={tag} className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-xs">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           )}

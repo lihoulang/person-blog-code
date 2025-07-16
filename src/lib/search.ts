@@ -79,7 +79,7 @@ export async function initSearchIndex() {
 }
 
 // 执行搜索查询
-export async function searchPosts(query: string): Promise<SearchablePost[]> {
+export async function searchPosts(query: string): Promise<(SearchablePost & { snippet?: string })[]> {
   try {
     const { index, posts } = await getSearchIndex();
     
@@ -94,7 +94,7 @@ export async function searchPosts(query: string): Promise<SearchablePost[]> {
     
     // 去重处理
     const resultIds = new Set<string>();
-    const resultPosts: SearchablePost[] = [];
+    const resultPosts: (SearchablePost & { snippet?: string })[] = [];
     
     for (const resultSet of allResults) {
       if (resultSet.result && resultSet.result.length > 0) {
@@ -103,7 +103,22 @@ export async function searchPosts(query: string): Promise<SearchablePost[]> {
             resultIds.add(id);
             const post = posts.find((p: SearchablePost) => p.id === id);
             if (post) {
-              resultPosts.push(post);
+              // 新增：正文片段snippet
+              let snippet = '';
+              if (query && post.content) {
+                const keywords = query.trim().split(/\s+/).filter(Boolean);
+                for (const k of keywords) {
+                  if (!k) continue;
+                  const idx = post.content.toLowerCase().indexOf(k.toLowerCase());
+                  if (idx !== -1) {
+                    const start = Math.max(0, idx - 30);
+                    const end = Math.min(post.content.length, idx + k.length + 30);
+                    snippet = (start > 0 ? '...' : '') + post.content.slice(start, end) + (end < post.content.length ? '...' : '');
+                    break;
+                  }
+                }
+              }
+              resultPosts.push({ ...post, snippet });
             }
           }
         }
